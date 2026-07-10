@@ -1,0 +1,880 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>靈感簿 · IDEA VAULT</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700;900&family=Space+Grotesk:wght@500;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg: #f2f3f5;
+    --ink: #16151a;
+    --ink-soft: #55535c;
+    --panel: #ffffff;
+    --line: rgba(22,21,26,0.12);
+    --shadow: rgba(22,21,26,0.16);
+
+    --coral: #ff5a3c;
+    --blue: #3a56e4;
+    --violet: #7b2ff7;
+    --mint: #00b391;
+    --yellow: #ffcf3f;
+    --pink: #ff3ea5;
+    --grey: #9b968f;
+  }
+
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background: var(--bg);
+    color: var(--ink);
+    font-family: 'Noto Sans TC', sans-serif;
+    min-height:100vh;
+    overflow-x:hidden;
+  }
+
+  .mesh-bg{ position:fixed; inset:0; z-index:0; overflow:hidden; pointer-events:none; }
+  .mesh-bg .blob{ position:absolute; border-radius:50%; filter:blur(90px); }
+  .mesh-bg .b1{ width:440px; height:440px; top:-12%; left:-8%; background:var(--coral); opacity:.45; animation: drift1 24s ease-in-out infinite; }
+  .mesh-bg .b2{ width:400px; height:400px; top:35%; right:-10%; background:var(--blue); opacity:.4; animation: drift2 28s ease-in-out infinite; }
+  .mesh-bg .b3{ width:380px; height:380px; bottom:-14%; left:22%; background:var(--violet); opacity:.35; animation: drift3 32s ease-in-out infinite; }
+  .mesh-bg .b4{ width:320px; height:320px; top:6%; right:28%; background:var(--mint); opacity:.35; animation: drift1 20s ease-in-out infinite reverse; }
+  .mesh-bg .b5{ width:280px; height:280px; bottom:10%; right:6%; background:var(--yellow); opacity:.3; animation: drift2 26s ease-in-out infinite reverse; }
+
+  @keyframes drift1{
+    0%,100%{ transform:translate(0,0) scale(1); }
+    50%{ transform:translate(70px,50px) scale(1.15); }
+  }
+  @keyframes drift2{
+    0%,100%{ transform:translate(0,0) scale(1); }
+    50%{ transform:translate(-60px,60px) scale(0.9); }
+  }
+  @keyframes drift3{
+    0%,100%{ transform:translate(0,0) scale(1); }
+    50%{ transform:translate(50px,-60px) scale(1.1); }
+  }
+  @media (prefers-reduced-motion: reduce){
+    .mesh-bg .blob{ animation:none !important; }
+  }
+
+  .wrap{ position:relative; z-index:1; max-width:1180px; margin:0 auto; padding:32px 24px 90px; }
+
+  /* ---------- Header ---------- */
+  header{
+    position:relative; border-radius:20px; margin-bottom:24px; overflow:hidden;
+    background: var(--panel); border:2.5px solid var(--ink);
+  }
+  .header-stripe{
+    height:9px; width:100%;
+    background:linear-gradient(90deg, var(--coral) 0 20%, var(--yellow) 20% 40%, var(--mint) 40% 60%, var(--blue) 60% 80%, var(--violet) 80% 100%);
+  }
+  .header-inner{
+    position:relative; display:flex; align-items:center; justify-content:space-between; gap:20px;
+    flex-wrap:wrap; padding:26px 30px; overflow:hidden;
+  }
+  .title-block{ position:relative; z-index:2; }
+  .eyebrow{
+    display:inline-block; font-family:'Space Grotesk',sans-serif; font-weight:700; font-size:.7rem;
+    letter-spacing:.22em; text-transform:uppercase; color:var(--coral); margin-bottom:8px;
+  }
+  h1{
+    font-family:'Noto Sans TC', sans-serif; font-weight:900; font-size:2.3rem; margin:0;
+    letter-spacing:.02em; line-height:1.1; color:var(--ink);
+  }
+  .subtitle{ font-size:.85rem; color:var(--ink-soft); margin-top:8px; font-weight:500; }
+
+  .banner-edit-btn{
+    position:absolute; top:16px; right:16px; z-index:3; background:rgba(22,21,26,0.06);
+    border:1.5px solid rgba(22,21,26,0.18); color:var(--ink); width:32px; height:32px; border-radius:50%;
+    cursor:pointer; font-size:.85rem; display:flex; align-items:center; justify-content:center; transition:.12s;
+  }
+  .banner-edit-btn:hover{ background:rgba(22,21,26,0.12); }
+
+  .banner-edit-input{
+    display:block; width:100%; max-width:420px; margin-bottom:8px; padding:9px 13px; border-radius:8px;
+    border:2px solid var(--line); font-family:'Noto Sans TC',sans-serif; color:var(--ink); background:var(--bg);
+  }
+  .banner-edit-input:focus{ outline:2px solid var(--blue); border-color:var(--blue); }
+  .banner-edit-input.title-input{ font-size:1.2rem; font-weight:900; }
+  .banner-edit-input.subtitle-input{ font-size:.85rem; }
+  .banner-edit-actions{ display:flex; gap:8px; margin-top:6px; position:relative; z-index:2; }
+  .banner-edit-actions button{
+    padding:7px 16px; border-radius:8px; border:none; font-size:.8rem; font-weight:700; cursor:pointer;
+    font-family:'Noto Sans TC',sans-serif;
+  }
+  #bannerSaveBtn{ background:var(--coral); color:#fff; }
+  #bannerCancelBtn{ background:rgba(22,21,26,0.08); color:var(--ink); }
+
+  .stat-bubble{
+    position:relative; z-index:2; background:var(--ink); color:#fff; border-radius:16px;
+    padding:14px 22px; text-align:center; flex-shrink:0; transform:rotate(-4deg);
+    box-shadow:0 8px 0 rgba(22,21,26,0.18);
+  }
+  .stat-bubble .num{ font-family:'Space Grotesk',sans-serif; font-weight:700; font-size:1.9rem; line-height:1; display:block; color:#fff; }
+  .stat-bubble .lbl{ font-size:.65rem; letter-spacing:.1em; color:rgba(255,255,255,0.65); text-transform:uppercase; font-weight:700; }
+
+  /* ---------- Type tabs ---------- */
+  .type-tabs{ display:flex; gap:8px; margin-bottom:16px; }
+  .type-tab{
+    padding:9px 18px; border:2px solid var(--ink); border-radius:20px; background:var(--panel);
+    font-family:'Noto Sans TC',sans-serif; font-size:.84rem; font-weight:700; cursor:pointer;
+    color:var(--ink-soft); transition:.12s;
+  }
+  .type-tab.active{ background:var(--ink); color:#fff; }
+  .type-tab .count{ opacity:.6; font-weight:500; margin-left:3px; }
+
+  /* ---------- Toolbar ---------- */
+  .toolbar{ display:flex; flex-wrap:wrap; gap:12px; align-items:center; margin-bottom:24px; }
+  .search-box{ flex:1 1 240px; position:relative; }
+  .search-box input{
+    width:100%; padding:13px 16px 13px 42px; border:2px solid var(--ink); border-radius:12px;
+    background:var(--panel); font-family:'Noto Sans TC',sans-serif; font-size:.92rem; color:var(--ink);
+    font-weight:500;
+  }
+  .search-box::before{
+    content:"⚡"; position:absolute; left:14px; top:50%; transform:translateY(-50%); font-size:.95rem;
+  }
+  .search-box input:focus{ outline:none; border-color:var(--blue); box-shadow:0 0 0 3px rgba(58,86,228,0.15); }
+
+  select{
+    padding:12px 14px; border:2px solid var(--ink); border-radius:12px; background:var(--panel);
+    font-family:'Noto Sans TC',sans-serif; font-size:.88rem; color:var(--ink); cursor:pointer; font-weight:600;
+  }
+  select:focus{ outline:none; border-color:var(--blue); }
+
+  .btn-new{
+    background:var(--coral); color:#fff; border:2px solid var(--ink); padding:13px 24px; border-radius:12px;
+    font-family:'Noto Sans TC',sans-serif; font-weight:700; font-size:.92rem; cursor:pointer;
+    box-shadow:4px 4px 0 var(--ink); transition:.12s;
+  }
+  .btn-new:hover{ transform:translate(-2px,-2px); box-shadow:6px 6px 0 var(--ink); }
+  .btn-new:active{ transform:translate(0,0); box-shadow:2px 2px 0 var(--ink); }
+
+  /* ---------- Card grid ---------- */
+  .grid{
+    display:grid; grid-template-columns:repeat(auto-fill, minmax(260px,1fr)); gap:22px;
+  }
+
+  .card{
+    background:var(--panel);
+    border:2px solid var(--ink);
+    border-radius:16px;
+    padding:0 0 16px;
+    position:relative;
+    box-shadow: 5px 5px 0 var(--shadow);
+    cursor:pointer;
+    transition: transform .18s cubic-bezier(.2,.9,.3,1.3), box-shadow .18s;
+    display:flex; flex-direction:column; min-height:210px;
+    overflow:hidden;
+    animation: pop-in .35s cubic-bezier(.2,.9,.3,1.3) backwards;
+  }
+  @keyframes pop-in{
+    from{ opacity:0; transform: translateY(14px) scale(.97); }
+    to{ opacity:1; transform: translateY(0) scale(1); }
+  }
+  .card:nth-child(3n+1){ transform: rotate(-0.6deg); }
+  .card:nth-child(3n+2){ transform: rotate(0.5deg); }
+  .card:nth-child(3n+3){ transform: rotate(-0.3deg); }
+  .card:hover{ transform: rotate(0deg) translateY(-4px); box-shadow:8px 8px 0 var(--card-accent, var(--blue)); border-color: var(--card-accent, var(--ink)); }
+
+  .card-band{
+    height:10px; width:100%; background:var(--card-accent, var(--blue));
+  }
+
+  .card-top{ display:flex; justify-content:space-between; align-items:flex-start; gap:8px; margin:14px 18px 6px;}
+  .type-chip{
+    font-size:.62rem; letter-spacing:.03em; color:var(--ink-soft); font-weight:700; margin-right:auto;
+    background:var(--bg); border:1.5px solid var(--line); border-radius:8px; padding:2px 8px;
+  }
+  .status-seal{
+    font-family:'Space Grotesk',sans-serif; font-weight:700; font-size:.66rem; letter-spacing:.02em;
+    background:var(--card-accent, var(--blue)); color:#fff; border-radius:20px; padding:4px 11px; white-space:nowrap;
+  }
+
+  .card h3{
+    font-family:'Noto Sans TC', sans-serif; font-weight:900; font-size:1.12rem; margin:0 18px 8px; line-height:1.4;
+    color:var(--ink);
+  }
+  .card p{ font-size:.84rem; line-height:1.65; color:var(--ink-soft); margin:0 18px 10px; flex:1; font-weight:500;
+    display:-webkit-box; -webkit-line-clamp:3; -webkit-box-orient:vertical; overflow:hidden; }
+
+  .card-meta-row{ display:flex; flex-wrap:wrap; gap:6px; margin:0 18px 10px; align-items:center; }
+  .deadline-chip{
+    font-size:.68rem; font-weight:700; padding:3px 10px; border-radius:20px; display:flex; align-items:center; gap:4px;
+  }
+  .deadline-chip.ok{ background:rgba(0,179,145,0.14); color:#00805f; }
+  .deadline-chip.soon{ background:rgba(255,207,63,0.25); color:#8a6a00; }
+  .deadline-chip.overdue{ background:rgba(255,90,60,0.16); color:#c13c22; }
+  .research-flag{
+    font-size:.66rem; letter-spacing:.03em; color:var(--mint); font-weight:700;
+    display:flex; align-items:center; gap:3px;
+  }
+
+  .card-tags{ display:flex; flex-wrap:wrap; gap:6px; margin:0 18px 10px; }
+  .tag{
+    font-size:.68rem; background:var(--bg); border:1.5px solid var(--line); border-radius:20px;
+    padding:3px 10px; color:var(--ink-soft); font-weight:700;
+  }
+  .tag.product{ background:rgba(123,47,247,0.08); border-color:rgba(123,47,247,0.3); color:var(--violet); }
+  .card-date{ font-size:.66rem; color:var(--ink-soft); opacity:.65; letter-spacing:.03em; margin:0 18px; font-weight:600; }
+
+  .empty-state{
+    grid-column:1/-1; text-align:center; padding:80px 20px; color:var(--ink-soft);
+  }
+  .empty-state .emoji{ font-size:2.4rem; display:block; margin-bottom:10px; }
+  .empty-state p{ font-size:.92rem; font-weight:600; }
+
+  /* ---------- Modal ---------- */
+  .overlay{
+    position:fixed; inset:0; background:rgba(22,21,26,0.6); backdrop-filter:blur(3px);
+    display:none; align-items:center; justify-content:center; z-index:50; padding:20px;
+  }
+  .overlay.open{ display:flex; }
+
+  .modal{
+    background:var(--panel); border:2.5px solid var(--ink); border-radius:20px; width:100%; max-width:580px;
+    max-height:90vh; overflow-y:auto; padding:30px 30px 26px; position:relative;
+    box-shadow:8px 8px 0 var(--coral);
+    animation: pop-in .25s cubic-bezier(.2,.9,.3,1.3);
+  }
+  .modal-close{
+    position:absolute; top:18px; right:20px; background:var(--ink); color:#fff; border:none; width:30px; height:30px;
+    border-radius:50%; font-size:1rem; cursor:pointer; display:flex; align-items:center; justify-content:center;
+  }
+  .modal h2{ font-family:'Noto Sans TC',sans-serif; font-weight:900; font-size:1.35rem; margin:0 0 20px; padding-right:30px; }
+
+  .field{ margin-bottom:18px; }
+  .field label{ display:block; font-size:.74rem; font-weight:700; letter-spacing:.04em; color:var(--ink-soft); margin-bottom:7px; text-transform:uppercase; }
+  .field input[type=text], .field input[type=date], .field textarea, .field select{
+    width:100%; padding:11px 14px; border:2px solid var(--line); border-radius:10px; background:var(--bg);
+    font-family:'Noto Sans TC',sans-serif; font-size:.9rem; color:var(--ink); resize:vertical; font-weight:500;
+  }
+  .field input:focus, .field textarea:focus, .field select:focus{ outline:none; border-color:var(--blue); }
+  .field textarea{ min-height:110px; line-height:1.6; }
+  .row2{ display:grid; grid-template-columns:1fr 1fr; gap:14px; }
+
+  .type-picker{ display:flex; gap:8px; }
+  .type-picker button{
+    flex:1; border:2px solid var(--line); background:var(--bg); padding:11px; border-radius:12px;
+    font-size:.88rem; cursor:pointer; color:var(--ink-soft); font-family:'Noto Sans TC',sans-serif; font-weight:700;
+    transition:.12s;
+  }
+  .type-picker button.sel{ border-color:var(--ink); background:var(--ink); color:#fff; }
+
+  /* ---------- Unified field box: white card + black border + colored chip label ---------- */
+  .field-box{
+    border:2.5px solid var(--ink); border-radius:14px; padding:20px 18px 18px; margin-bottom:18px;
+    background:var(--panel); position:relative;
+  }
+  .field-box .field{ margin-bottom:0; }
+  .field-box .field + .field{ margin-top:16px; }
+  .field-box label{
+    position:relative; display:inline-block; top:-2px; background:var(--chip, var(--ink)); color:#fff;
+    font-size:.8rem; font-weight:800; letter-spacing:.02em; text-transform:none;
+    padding:5px 14px; border-radius:20px; margin:0 0 12px;
+  }
+  .field-box.fb-coral{ --chip: var(--coral); }
+  .field-box.fb-blue{ --chip: var(--blue); }
+  .field-box.fb-mint{ --chip: var(--mint); }
+  .field-box.fb-violet{ --chip: var(--violet); }
+  .field-box.fb-pink{ --chip: var(--pink); }
+  .field-box.fb-yellow{ --chip: var(--yellow); }
+  .field-box.fb-grey{ --chip: var(--grey); }
+
+  .product-grid{ display:flex; flex-wrap:wrap; gap:8px; }
+  .product-chip{
+    border:2px solid var(--line); background:var(--panel); padding:8px 14px; border-radius:20px;
+    font-size:.8rem; cursor:pointer; color:var(--ink-soft); font-family:'Noto Sans TC',sans-serif; font-weight:600;
+    transition:.12s;
+  }
+  .product-chip.sel{ border-color:var(--violet); background:var(--violet); color:#fff; }
+
+  .image-upload-zone{
+    border:2px dashed var(--ink); border-radius:12px; padding:18px; text-align:center; cursor:pointer;
+    color:var(--ink-soft); font-size:.84rem; font-weight:700; background:var(--bg); transition:.12s;
+  }
+  .image-upload-zone:hover{ background:var(--panel); border-color:var(--violet); color:var(--violet); }
+  .image-preview-grid{ display:flex; flex-wrap:wrap; gap:8px; margin-top:10px; }
+  .image-thumb{ position:relative; width:64px; height:64px; border-radius:10px; overflow:hidden; border:2px solid var(--ink); flex-shrink:0; }
+  .image-thumb img{ width:100%; height:100%; object-fit:cover; display:block; }
+  .image-thumb .rm{
+    position:absolute; top:2px; right:2px; width:18px; height:18px; border-radius:50%; background:var(--coral);
+    color:#fff; border:none; font-size:.65rem; line-height:1; cursor:pointer; display:flex; align-items:center; justify-content:center;
+  }
+
+  .card-ref-strip{ display:flex; gap:5px; margin:0 18px 10px; }
+  .card-ref-strip img{ width:36px; height:36px; object-fit:cover; border-radius:8px; border:1.5px solid var(--ink); }
+  .card-ref-more{
+    width:36px; height:36px; border-radius:8px; border:1.5px solid var(--line); background:var(--bg);
+    display:flex; align-items:center; justify-content:center; font-size:.68rem; font-weight:700; color:var(--ink-soft);
+  }
+
+  .status-picker{ display:flex; gap:8px; flex-wrap:wrap; }
+  .status-picker button{
+    border:2px solid var(--line); background:var(--panel); padding:8px 14px; border-radius:20px;
+    font-size:.78rem; cursor:pointer; color:var(--ink-soft); font-family:'Noto Sans TC',sans-serif; font-weight:700;
+    transition:.12s;
+  }
+  .status-picker button.sel{ border-color:var(--sel-color, var(--ink)); background:var(--sel-color, var(--ink)); color:#fff; }
+
+  .modal-actions{ display:flex; justify-content:space-between; align-items:center; margin-top:24px; gap:10px; }
+  .btn-save{
+    background:var(--coral); color:#fff; border:2px solid var(--ink); padding:12px 28px; border-radius:12px;
+    font-family:'Noto Sans TC',sans-serif; font-weight:700; font-size:.9rem; cursor:pointer;
+    box-shadow:3px 3px 0 var(--ink); transition:.12s;
+  }
+  .btn-save:hover{ transform:translate(-1px,-1px); box-shadow:4px 4px 0 var(--ink); }
+  .btn-delete{
+    background:none; border:2px solid var(--line); color:var(--ink-soft); padding:11px 18px; border-radius:12px;
+    font-family:'Noto Sans TC',sans-serif; font-size:.82rem; cursor:pointer; font-weight:700;
+  }
+  .btn-delete:hover{ background:var(--coral); border-color:var(--coral); color:#fff; }
+
+  @media (max-width:520px){
+    .row2{ grid-template-columns:1fr; }
+    .header-inner{ padding:20px; flex-direction:column; align-items:flex-start; }
+    h1{ font-size:1.7rem; }
+    .stat-bubble{ align-self:flex-start; transform:rotate(-2deg); padding:11px 18px; }
+    .banner-edit-btn{ top:12px; right:12px; }
+    .type-tabs{ overflow-x:auto; flex-wrap:nowrap; padding-bottom:4px; }
+    .toolbar{ flex-direction:column; align-items:stretch; }
+    .toolbar select, .toolbar .btn-new{ width:100%; }
+    .grid{ grid-template-columns:1fr; gap:16px; }
+    .modal{ padding:22px 18px 20px; border-radius:16px; }
+    .modal-actions{ flex-direction:column-reverse; align-items:stretch; }
+    .modal-actions button{ width:100%; }
+  }
+</style>
+</head>
+<body>
+<div class="mesh-bg" aria-hidden="true">
+  <span class="blob b1"></span>
+  <span class="blob b2"></span>
+  <span class="blob b3"></span>
+  <span class="blob b4"></span>
+  <span class="blob b5"></span>
+</div>
+<div class="wrap">
+
+  <header>
+    <div class="header-stripe"></div>
+    <div class="header-inner">
+      <button class="banner-edit-btn" id="bannerEditBtn" title="編輯標題">✏️</button>
+      <div class="title-block">
+        <span class="eyebrow">Idea Vault · 落筆前</span>
+        <div id="bannerDisplay">
+          <h1 id="bannerTitle">靈感簿</h1>
+          <div class="subtitle" id="bannerSubtitle">未成形嘅句子、畫面、對話，先擺呢度</div>
+        </div>
+        <div id="bannerEdit" style="display:none;">
+          <input type="text" id="bannerTitleInput" class="banner-edit-input title-input" placeholder="標題">
+          <input type="text" id="bannerSubtitleInput" class="banner-edit-input subtitle-input" placeholder="副標題">
+          <div class="banner-edit-actions">
+            <button type="button" id="bannerSaveBtn">儲存</button>
+            <button type="button" id="bannerCancelBtn">取消</button>
+          </div>
+        </div>
+      </div>
+      <div class="stat-bubble">
+        <span class="num" id="statNum">0</span>
+        <span class="lbl">Ideas</span>
+      </div>
+    </div>
+  </header>
+
+  <div class="type-tabs" id="typeTabs"></div>
+
+  <div class="toolbar">
+    <div class="search-box">
+      <input type="text" id="searchInput" placeholder="搜尋標題、內容、標籤…">
+    </div>
+    <select id="statusFilter">
+      <option value="">全部狀態</option>
+    </select>
+    <button class="btn-new" id="newBtn">+ 新增卡片</button>
+  </div>
+
+  <div class="grid" id="grid"></div>
+
+</div>
+
+<div class="overlay" id="overlay">
+  <div class="modal">
+    <button class="modal-close" id="closeBtn">✕</button>
+    <h2 id="modalTitle">新增靈感卡</h2>
+    <form id="cardForm">
+
+      <div class="field-box fb-coral">
+        <div class="field">
+          <label>類型</label>
+          <div class="type-picker" id="typePicker">
+            <button type="button" data-type="文稿" class="sel">✍️ 文稿</button>
+            <button type="button" data-type="畫稿">🎨 畫稿</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="field-box fb-blue">
+        <div class="field">
+          <label>標題 / 一句話 Log Line</label>
+          <input type="text" id="f-title" placeholder="例如：驛站雪夜，重逢未語先紅眼" required>
+        </div>
+      </div>
+
+      <div class="field-box fb-mint">
+        <div class="field">
+          <label>標籤（逗號分隔）</label>
+          <input type="text" id="f-tags" placeholder="古風, 重逢, 現PA">
+        </div>
+      </div>
+
+      <div class="field-box fb-violet">
+        <div class="field">
+          <label>內容筆記 / 畫面 / 靈感來源</label>
+          <textarea id="f-notes" placeholder="場景、對話、情緒基調、引用出處…"></textarea>
+        </div>
+      </div>
+
+      <div class="field-box fb-pink">
+        <div class="field">
+          <label>資料 / Research</label>
+          <textarea id="f-research" placeholder="考據、史料、參考連結、引文出處…"></textarea>
+        </div>
+      </div>
+
+      <div class="field-box fb-yellow" id="artBox" style="display:none;">
+        <div class="field">
+          <label>畫稿專屬 · Deadline</label>
+          <input type="date" id="f-deadline">
+        </div>
+        <div class="field">
+          <label>畫稿專屬 · 想做嘅制品（可多選）</label>
+          <div class="product-grid" id="productGrid"></div>
+        </div>
+        <div class="field">
+          <label>畫稿專屬 · 參考圖</label>
+          <input type="file" id="f-images" accept="image/*" multiple style="display:none">
+          <div class="image-upload-zone" id="imageUploadZone">📎 點擊上載參考圖（可多張）</div>
+          <div class="image-preview-grid" id="imagePreviewGrid"></div>
+        </div>
+      </div>
+
+      <div class="field-box fb-grey">
+        <div class="field">
+          <label>狀態</label>
+          <div class="status-picker" id="statusPicker"></div>
+        </div>
+      </div>
+
+      <div class="modal-actions">
+        <button type="button" class="btn-delete" id="deleteBtn" style="display:none;">刪除卡片</button>
+        <button type="submit" class="btn-save">存入稿箱</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<script>
+const STORAGE_KEY = 'idea_vault_cards_v2';
+
+const STATUS_SETS = {
+  '文稿': { '發酵中':'#ff5a3c', '準備動筆':'#3a56e4', '草稿中':'#00b391', '已完成':'#7b2ff7', '擱置':'#9b968f' },
+  '畫稿': { '約稿中':'#ff3ea5', '草稿中':'#00b391', '已完成':'#7b2ff7', '擱置':'#9b968f' }
+};
+const ALL_STATUS_COLORS = Object.assign({}, STATUS_SETS['文稿'], STATUS_SETS['畫稿']);
+
+const PRODUCT_OPTIONS = ['亞克力立牌','徽章','明信片','亞克力吊飾','貼紙','色紙','其他'];
+
+let cards = [];
+let editingId = null;
+let currentType = '文稿';       // type selected inside the modal form
+let activeTypeTab = '全部';      // grid filter tab
+let currentImages = [];         // ref images (base64) for the card being edited
+
+function loadCards(){
+  try{
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if(raw){
+      cards = JSON.parse(raw);
+      return;
+    }
+    // 嘗試從舊版（v1，無分類）遷移資料
+    const oldRaw = localStorage.getItem('idea_vault_cards_v1');
+    if(oldRaw){
+      const oldCards = JSON.parse(oldRaw);
+      cards = oldCards.map(c => Object.assign({ type:'文稿', deadline:'', products:[], images:[] }, c));
+      saveCards();
+      return;
+    }
+    cards = seedCards();
+    saveCards();
+  }catch(e){
+    console.error('讀取失敗', e);
+    cards = [];
+  }
+}
+function saveCards(){
+  try{
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(cards));
+  }catch(e){
+    console.error('儲存失敗', e);
+    alert('儲存失敗，請檢查瀏覽器儲存空間。');
+  }
+}
+function seedCards(){
+  return [
+    {
+      id: crypto.randomUUID(),
+      type: '文稿',
+      title: '驛站雪夜，重逢未語先紅眼',
+      tags: ['古風','重逢'],
+      notes: '雪夜驛站，久別重逢，話未出口先紅了眼眶。想寫剋制底下的洶湧。',
+      research: '',
+      deadline: '',
+      products: [],
+      images: [],
+      status: '發酵中',
+      date: new Date().toISOString()
+    }
+  ];
+}
+
+/* ---------- Type tabs (grid filter) ---------- */
+function renderTypeTabs(){
+  const counts = { '全部': cards.length, '文稿': cards.filter(c=>c.type==='文稿').length, '畫稿': cards.filter(c=>c.type==='畫稿').length };
+  const el = document.getElementById('typeTabs');
+  el.innerHTML = ['全部','文稿','畫稿'].map(t=>`
+    <div class="type-tab ${activeTypeTab===t?'active':''}" data-tab="${t}">${t}<span class="count">${counts[t]}</span></div>
+  `).join('');
+  el.querySelectorAll('.type-tab').forEach(b=>{
+    b.addEventListener('click', ()=>{ activeTypeTab = b.dataset.tab; renderTypeTabs(); renderStatusFilterOptions(); renderGrid(); });
+  });
+}
+
+function renderStatusFilterOptions(){
+  const sel = document.getElementById('statusFilter');
+  const prev = sel.value;
+  let statuses;
+  if(activeTypeTab === '全部'){ statuses = Object.keys(ALL_STATUS_COLORS); }
+  else{ statuses = Object.keys(STATUS_SETS[activeTypeTab]); }
+  sel.innerHTML = '<option value="">全部狀態</option>' + statuses.map(s=>`<option value="${s}">${s}</option>`).join('');
+  if(statuses.includes(prev)) sel.value = prev;
+}
+
+function getFiltered(){
+  const q = document.getElementById('searchInput').value.trim().toLowerCase();
+  const statusF = document.getElementById('statusFilter').value;
+  return cards.filter(c=>{
+    if(activeTypeTab !== '全部' && c.type !== activeTypeTab) return false;
+    if(statusF && c.status !== statusF) return false;
+    if(q){
+      const hay = (c.title+' '+c.notes+' '+(c.research||'')+' '+c.tags.join(' ')+' '+(c.products||[]).join(' ')).toLowerCase();
+      if(!hay.includes(q)) return false;
+    }
+    return true;
+  }).sort((a,b)=> new Date(b.date) - new Date(a.date));
+}
+
+function formatDate(iso){
+  const d = new Date(iso);
+  return `${d.getFullYear()}.${String(d.getMonth()+1).padStart(2,'0')}.${String(d.getDate()).padStart(2,'0')}`;
+}
+
+function deadlineInfo(deadlineStr){
+  if(!deadlineStr) return null;
+  const today = new Date(); today.setHours(0,0,0,0);
+  const dl = new Date(deadlineStr + 'T00:00:00');
+  const diffDays = Math.round((dl - today) / 86400000);
+  let cls = 'ok';
+  if(diffDays < 0) cls = 'overdue';
+  else if(diffDays <= 5) cls = 'soon';
+  const label = diffDays < 0 ? `已過期 ${Math.abs(diffDays)} 日` : (diffDays===0 ? '今日 deadline' : `仲有 ${diffDays} 日`);
+  return { cls, label, text: deadlineStr };
+}
+
+function renderGrid(){
+  const grid = document.getElementById('grid');
+  const list = getFiltered();
+  document.getElementById('statNum').textContent = cards.length;
+  if(list.length === 0){
+    grid.innerHTML = `<div class="empty-state"><span class="emoji">✨</span><p>暫時未有卡。試下新增一張靈感卡。</p></div>`;
+    return;
+  }
+  grid.innerHTML = list.map((c,i)=>{
+    const color = ALL_STATUS_COLORS[c.status] || '#9b968f';
+    const dl = c.type === '畫稿' ? deadlineInfo(c.deadline) : null;
+    const productTags = (c.products||[]).map(p=>`<span class="tag product">🎁 ${escapeHtml(p)}</span>`).join('');
+    const normalTags = (c.tags||[]).map(t=>`<span class="tag">#${escapeHtml(t)}</span>`).join('');
+    const imgs = c.images || [];
+    const refStrip = imgs.length ? `
+      <div class="card-ref-strip">
+        ${imgs.slice(0,4).map(src=>`<img src="${src}" alt="ref">`).join('')}
+        ${imgs.length > 4 ? `<div class="card-ref-more">+${imgs.length-4}</div>` : ''}
+      </div>` : '';
+    return `
+    <div class="card" style="--card-accent:${color}; animation-delay:${Math.min(i*0.04,0.3)}s" data-id="${c.id}">
+      <div class="card-band"></div>
+      <div class="card-top">
+        <span class="type-chip">${c.type === '畫稿' ? '🎨 畫稿' : '✍️ 文稿'}</span>
+        <span class="status-seal">${c.status}</span>
+      </div>
+      <h3>${escapeHtml(c.title)}</h3>
+      <p>${escapeHtml(c.notes||'（未有筆記）')}</p>
+      ${refStrip}
+      <div class="card-meta-row">
+        ${dl ? `<span class="deadline-chip ${dl.cls}">⏰ ${dl.text} · ${dl.label}</span>` : ''}
+        ${c.research ? '<span class="research-flag">📎 附資料</span>' : ''}
+      </div>
+      <div class="card-tags">${productTags}${normalTags}</div>
+      <div class="card-date">${formatDate(c.date)}</div>
+    </div>`;
+  }).join('');
+  grid.querySelectorAll('.card').forEach(el=>{
+    el.addEventListener('click', ()=> openModal(el.dataset.id));
+  });
+}
+
+function escapeHtml(str){
+  const d = document.createElement('div');
+  d.textContent = str;
+  return d.innerHTML;
+}
+
+/* ---------- Modal: type picker ---------- */
+function setCurrentType(type){
+  currentType = type;
+  document.querySelectorAll('#typePicker button').forEach(b=>{
+    b.classList.toggle('sel', b.dataset.type === type);
+  });
+  document.getElementById('artBox').style.display = (type === '畫稿') ? 'block' : 'none';
+  renderStatusPicker(Object.keys(STATUS_SETS[type])[0]);
+  if(type === '畫稿'){
+    renderProductGrid([]);
+    currentImages = [];
+    renderImagePreview();
+  }
+}
+
+document.querySelectorAll('#typePicker button').forEach(b=>{
+  b.addEventListener('click', ()=> setCurrentType(b.dataset.type));
+});
+
+function renderProductGrid(selected){
+  const el = document.getElementById('productGrid');
+  el.innerHTML = PRODUCT_OPTIONS.map(p=>`
+    <button type="button" class="product-chip ${selected.includes(p)?'sel':''}" data-product="${p}">${p}</button>
+  `).join('');
+  el.querySelectorAll('.product-chip').forEach(b=>{
+    b.addEventListener('click', ()=> b.classList.toggle('sel'));
+  });
+}
+
+/* ---------- Ref image upload ---------- */
+function resizeImage(file, maxDim = 900, quality = 0.75){
+  return new Promise((resolve, reject)=>{
+    const reader = new FileReader();
+    reader.onload = (e)=>{
+      const img = new Image();
+      img.onload = ()=>{
+        let w = img.width, h = img.height;
+        if(w > h){ if(w > maxDim){ h = Math.round(h * maxDim / w); w = maxDim; } }
+        else{ if(h > maxDim){ w = Math.round(w * maxDim / h); h = maxDim; } }
+        const canvas = document.createElement('canvas');
+        canvas.width = w; canvas.height = h;
+        canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+        resolve(canvas.toDataURL('image/jpeg', quality));
+      };
+      img.onerror = reject;
+      img.src = e.target.result;
+    };
+    reader.onerror = reject;
+    reader.readAsDataURL(file);
+  });
+}
+
+function renderImagePreview(){
+  const el = document.getElementById('imagePreviewGrid');
+  el.innerHTML = currentImages.map((src, i)=>`
+    <div class="image-thumb">
+      <img src="${src}" alt="ref">
+      <button type="button" class="rm" data-index="${i}">✕</button>
+    </div>
+  `).join('');
+  el.querySelectorAll('.rm').forEach(b=>{
+    b.addEventListener('click', ()=>{
+      currentImages.splice(Number(b.dataset.index), 1);
+      renderImagePreview();
+    });
+  });
+}
+
+document.getElementById('imageUploadZone').addEventListener('click', ()=>{
+  document.getElementById('f-images').click();
+});
+document.getElementById('f-images').addEventListener('change', async (e)=>{
+  const files = Array.from(e.target.files || []);
+  const MAX_IMAGES = 6;
+  for(const file of files){
+    if(currentImages.length >= MAX_IMAGES){
+      alert(`最多 ${MAX_IMAGES} 張參考圖，多出嘅未加入。`);
+      break;
+    }
+    try{
+      const dataUrl = await resizeImage(file);
+      currentImages.push(dataUrl);
+    }catch(err){
+      console.error('圖片處理失敗', err);
+    }
+  }
+  renderImagePreview();
+  e.target.value = '';
+});
+
+function renderStatusPicker(selected){
+  const el = document.getElementById('statusPicker');
+  const set = STATUS_SETS[currentType];
+  el.innerHTML = Object.keys(set).map(s=>`
+    <button type="button" data-status="${s}" class="${s===selected?'sel':''}" style="--sel-color:${set[s]}">${s}</button>
+  `).join('');
+  el.querySelectorAll('button').forEach(b=>{
+    b.addEventListener('click', ()=>{
+      el.querySelectorAll('button').forEach(x=>x.classList.remove('sel'));
+      b.classList.add('sel');
+    });
+  });
+}
+
+function openModal(id){
+  const overlay = document.getElementById('overlay');
+  const form = document.getElementById('cardForm');
+  form.reset();
+  if(id){
+    const c = cards.find(x=>x.id===id);
+    editingId = id;
+    document.getElementById('modalTitle').textContent = '編輯靈感卡';
+    setCurrentType(c.type || '文稿');
+    document.getElementById('f-title').value = c.title;
+    document.getElementById('f-tags').value = (c.tags||[]).join(', ');
+    document.getElementById('f-notes').value = c.notes || '';
+    document.getElementById('f-research').value = c.research || '';
+    document.getElementById('f-deadline').value = c.deadline || '';
+    renderProductGrid(c.products || []);
+    currentImages = (c.images || []).slice();
+    renderImagePreview();
+    renderStatusPicker(c.status);
+    document.getElementById('deleteBtn').style.display = 'inline-block';
+  } else {
+    editingId = null;
+    document.getElementById('modalTitle').textContent = '新增靈感卡';
+    const initType = (activeTypeTab === '畫稿') ? '畫稿' : '文稿';
+    setCurrentType(initType);
+    document.getElementById('deleteBtn').style.display = 'none';
+  }
+  overlay.classList.add('open');
+  document.getElementById('f-title').focus();
+}
+function closeModal(){
+  document.getElementById('overlay').classList.remove('open');
+  editingId = null;
+}
+
+document.getElementById('newBtn').addEventListener('click', ()=> openModal(null));
+document.getElementById('closeBtn').addEventListener('click', closeModal);
+document.getElementById('overlay').addEventListener('click', (e)=>{
+  if(e.target.id === 'overlay') closeModal();
+});
+document.getElementById('searchInput').addEventListener('input', renderGrid);
+document.getElementById('statusFilter').addEventListener('change', renderGrid);
+
+document.getElementById('cardForm').addEventListener('submit', (e)=>{
+  e.preventDefault();
+  const title = document.getElementById('f-title').value.trim();
+  if(!title) return;
+  const tags = document.getElementById('f-tags').value.split(',').map(t=>t.trim()).filter(Boolean);
+  const notes = document.getElementById('f-notes').value.trim();
+  const research = document.getElementById('f-research').value.trim();
+  const deadline = document.getElementById('f-deadline').value;
+  const products = Array.from(document.querySelectorAll('.product-chip.sel')).map(b=>b.dataset.product);
+  const statusBtn = document.querySelector('#statusPicker button.sel');
+  const status = statusBtn ? statusBtn.dataset.status : Object.keys(STATUS_SETS[currentType])[0];
+
+  const payload = {
+    type: currentType, title, tags, notes, research, status,
+    deadline: currentType === '畫稿' ? deadline : '',
+    products: currentType === '畫稿' ? products : [],
+    images: currentType === '畫稿' ? currentImages.slice() : []
+  };
+
+  if(editingId){
+    const c = cards.find(x=>x.id===editingId);
+    Object.assign(c, payload);
+  } else {
+    cards.push(Object.assign({ id: crypto.randomUUID(), date: new Date().toISOString() }, payload));
+  }
+  saveCards();
+  closeModal();
+  renderTypeTabs();
+  renderStatusFilterOptions();
+  renderGrid();
+});
+
+document.getElementById('deleteBtn').addEventListener('click', ()=>{
+  if(!editingId) return;
+  if(confirm('確定要刪除呢張靈感卡？此動作無法復原。')){
+    cards = cards.filter(x=>x.id!==editingId);
+    saveCards();
+    closeModal();
+    renderTypeTabs();
+    renderStatusFilterOptions();
+    renderGrid();
+  }
+});
+
+/* ---------- Banner title/subtitle editing ---------- */
+const BANNER_KEY = 'idea_vault_banner_v1';
+function loadBanner(){
+  try{
+    const raw = localStorage.getItem(BANNER_KEY);
+    if(raw){
+      const b = JSON.parse(raw);
+      if(b.title) document.getElementById('bannerTitle').textContent = b.title;
+      if(typeof b.subtitle === 'string') document.getElementById('bannerSubtitle').textContent = b.subtitle;
+    }
+  }catch(e){ console.error('讀取標題失敗', e); }
+}
+function saveBanner(title, subtitle){
+  try{
+    localStorage.setItem(BANNER_KEY, JSON.stringify({ title, subtitle }));
+  }catch(e){ console.error('儲存標題失敗', e); }
+}
+document.getElementById('bannerEditBtn').addEventListener('click', ()=>{
+  document.getElementById('bannerTitleInput').value = document.getElementById('bannerTitle').textContent;
+  document.getElementById('bannerSubtitleInput').value = document.getElementById('bannerSubtitle').textContent;
+  document.getElementById('bannerDisplay').style.display = 'none';
+  document.getElementById('bannerEdit').style.display = 'block';
+  document.getElementById('bannerTitleInput').focus();
+});
+document.getElementById('bannerCancelBtn').addEventListener('click', ()=>{
+  document.getElementById('bannerEdit').style.display = 'none';
+  document.getElementById('bannerDisplay').style.display = 'block';
+});
+document.getElementById('bannerSaveBtn').addEventListener('click', ()=>{
+  const t = document.getElementById('bannerTitleInput').value.trim() || '靈感簿';
+  const s = document.getElementById('bannerSubtitleInput').value.trim();
+  document.getElementById('bannerTitle').textContent = t;
+  document.getElementById('bannerSubtitle').textContent = s;
+  saveBanner(t, s);
+  document.getElementById('bannerEdit').style.display = 'none';
+  document.getElementById('bannerDisplay').style.display = 'block';
+});
+
+// init
+loadCards();
+loadBanner();
+renderTypeTabs();
+renderStatusFilterOptions();
+renderGrid();
+</script>
+</body>
+</html>
