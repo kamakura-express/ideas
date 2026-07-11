@@ -22,6 +22,8 @@
     --yellow: #ffcf3f;
     --pink: #ff3ea5;
     --grey: #9b968f;
+    --orange: #ff8c42;
+    --teal: #0891b2;
   }
 
   *{box-sizing:border-box;}
@@ -90,6 +92,19 @@
     cursor:pointer; font-size:.85rem; display:flex; align-items:center; justify-content:center; transition:.12s;
   }
   .banner-edit-btn:hover{ background:rgba(22,21,26,0.12); }
+
+  .sync-btn{
+    position:absolute; top:16px; right:56px; z-index:3; background:rgba(22,21,26,0.06);
+    border:1.5px solid rgba(22,21,26,0.18); color:var(--ink); width:32px; height:32px; border-radius:50%;
+    cursor:pointer; font-size:.85rem; display:flex; align-items:center; justify-content:center; transition:.12s;
+  }
+  .sync-btn:hover{ background:rgba(22,21,26,0.12); }
+  .sync-btn.connected{ background:var(--mint); border-color:var(--mint); color:#fff; }
+
+  .sync-desc{ font-size:.82rem; color:var(--ink-soft); margin:0 0 16px; line-height:1.65; }
+  .sync-status{ font-size:.82rem; margin:14px 0 0; padding:10px 14px; border-radius:10px; display:none; line-height:1.5; }
+  .sync-status.ok{ display:block; background:rgba(0,179,145,0.12); color:#00805f; font-weight:600; }
+  .sync-status.err{ display:block; background:rgba(255,90,60,0.12); color:#c13c22; font-weight:600; }
 
   .banner-edit-input{
     display:block; width:100%; max-width:420px; margin-bottom:8px; padding:9px 13px; border-radius:8px;
@@ -281,6 +296,30 @@
   .field-box.fb-pink{ --chip: var(--pink); }
   .field-box.fb-yellow{ --chip: var(--yellow); }
   .field-box.fb-grey{ --chip: var(--grey); }
+  .field-box.fb-orange{ --chip: var(--orange); }
+  .field-box.fb-teal{ --chip: var(--teal); }
+
+  .scene-list{ display:flex; flex-direction:column; gap:8px; margin-bottom:10px; }
+  .scene-item{
+    display:flex; align-items:flex-start; gap:8px; background:var(--bg); border:1.5px solid var(--line);
+    border-radius:10px; padding:9px 11px; font-size:.84rem; line-height:1.5;
+  }
+  .scene-item .txt{ flex:1; color:var(--ink); }
+  .scene-item .rm{
+    background:none; border:none; color:var(--ink-soft); cursor:pointer; font-size:.8rem; flex-shrink:0; padding:2px;
+  }
+  .scene-item .rm:hover{ color:var(--coral); }
+  .scene-add-row{ display:flex; gap:8px; }
+  .scene-add-row input{
+    flex:1; padding:10px 12px; border:2px solid var(--line); border-radius:10px; background:var(--bg);
+    font-family:'Noto Sans TC',sans-serif; font-size:.86rem; color:var(--ink);
+  }
+  .scene-add-row input:focus{ outline:none; border-color:var(--chip, var(--orange)); }
+  .scene-add-row button{
+    background:var(--ink); color:#fff; border:none; width:42px; border-radius:10px; font-size:1.1rem; cursor:pointer;
+    font-weight:700; flex-shrink:0;
+  }
+  .scene-add-row button:hover{ background:var(--chip, var(--orange)); }
 
   .product-grid{ display:flex; flex-wrap:wrap; gap:8px; }
   .product-chip{
@@ -337,6 +376,7 @@
     h1{ font-size:1.7rem; }
     .stat-bubble{ align-self:flex-start; transform:rotate(-2deg); padding:11px 18px; }
     .banner-edit-btn{ top:12px; right:12px; }
+    .sync-btn{ top:12px; right:52px; }
     .type-tabs{ overflow-x:auto; flex-wrap:nowrap; padding-bottom:4px; }
     .toolbar{ flex-direction:column; align-items:stretch; }
     .toolbar select, .toolbar .btn-new{ width:100%; }
@@ -360,6 +400,7 @@
   <header>
     <div class="header-stripe"></div>
     <div class="header-inner">
+      <button class="sync-btn" id="syncBtn" title="Cross-device 同步">☁️</button>
       <button class="banner-edit-btn" id="bannerEditBtn" title="編輯標題">✏️</button>
       <div class="title-block">
         <span class="eyebrow">Idea Vault · 落筆前</span>
@@ -436,6 +477,28 @@
         </div>
       </div>
 
+      <div class="field-box fb-orange">
+        <div class="field">
+          <label>場景（隨時加）</label>
+          <div class="scene-list" id="sceneList"></div>
+          <div class="scene-add-row">
+            <input type="text" id="sceneInput" placeholder="諗到嘅場景，按 Enter 或撳 + 加入">
+            <button type="button" id="sceneAddBtn">+</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="field-box fb-teal">
+        <div class="field">
+          <label>設定（隨時加）</label>
+          <div class="scene-list" id="settingList"></div>
+          <div class="scene-add-row">
+            <input type="text" id="settingInput" placeholder="諗到嘅設定，按 Enter 或撳 + 加入">
+            <button type="button" id="settingAddBtn">+</button>
+          </div>
+        </div>
+      </div>
+
       <div class="field-box fb-pink">
         <div class="field">
           <label>資料 / Research</label>
@@ -475,6 +538,29 @@
   </div>
 </div>
 
+<div class="overlay" id="syncOverlay">
+  <div class="modal" style="max-width:480px;">
+    <button class="modal-close" id="syncCloseBtn">✕</button>
+    <h2>☁️ Cross-device 同步</h2>
+    <p class="sync-desc">
+      貼上你新 Firebase project 嘅 config（喺 Firebase Console →「專案設定」→「一般」→ 你嘅網頁應用程式 度攞到嗰嚿嘢，貼成個 object 落嚟就得，唔使自己整靚佢）。
+    </p>
+    <div class="field-box fb-blue">
+      <div class="field">
+        <label>Firebase Config</label>
+        <textarea id="firebaseConfigInput" placeholder='const firebaseConfig = { apiKey: "...", authDomain: "...", projectId: "...", ... };' style="min-height:150px; font-family:monospace; font-size:.76rem;"></textarea>
+      </div>
+    </div>
+    <div class="sync-status" id="syncStatus"></div>
+    <div class="modal-actions">
+      <button type="button" class="btn-delete" id="syncDisconnectBtn" style="display:none;">停用同步</button>
+      <button type="button" class="btn-save" id="syncConnectBtn">連接同步</button>
+    </div>
+  </div>
+</div>
+
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
 <script>
 const STORAGE_KEY = 'idea_vault_cards_v2';
 
@@ -491,6 +577,13 @@ let editingId = null;
 let currentType = '文稿';       // type selected inside the modal form
 let activeTypeTab = '全部';      // grid filter tab
 let currentImages = [];         // ref images (base64) for the card being edited
+let currentScenes = [];         // scene entries for the card being edited
+let currentSettings = [];       // setting entries for the card being edited
+
+const FIREBASE_CONFIG_KEY = 'idea_vault_firebase_config';
+let db = null;
+let syncEnabled = false;
+let unsubscribeCards = null;
 
 function loadCards(){
   try{
@@ -503,7 +596,7 @@ function loadCards(){
     const oldRaw = localStorage.getItem('idea_vault_cards_v1');
     if(oldRaw){
       const oldCards = JSON.parse(oldRaw);
-      cards = oldCards.map(c => Object.assign({ type:'文稿', deadline:'', products:[], images:[] }, c));
+      cards = oldCards.map(c => Object.assign({ type:'文稿', deadline:'', products:[], images:[], scenes:[], settings:[] }, c));
       saveCards();
       return;
     }
@@ -534,6 +627,8 @@ function seedCards(){
       deadline: '',
       products: [],
       images: [],
+      scenes: [],
+      settings: [],
       status: '發酵中',
       date: new Date().toISOString()
     }
@@ -624,6 +719,8 @@ function renderGrid(){
       ${refStrip}
       <div class="card-meta-row">
         ${dl ? `<span class="deadline-chip ${dl.cls}">⏰ ${dl.text} · ${dl.label}</span>` : ''}
+        ${(c.scenes && c.scenes.length) ? `<span class="research-flag" style="color:var(--orange)">💡 ${c.scenes.length} 個場景</span>` : ''}
+        ${(c.settings && c.settings.length) ? `<span class="research-flag" style="color:var(--teal)">🗂️ ${c.settings.length} 個設定</span>` : ''}
         ${c.research ? '<span class="research-flag">📎 附資料</span>' : ''}
       </div>
       <div class="card-tags">${productTags}${normalTags}</div>
@@ -731,6 +828,67 @@ document.getElementById('f-images').addEventListener('change', async (e)=>{
   e.target.value = '';
 });
 
+/* ---------- Scene / setting list ---------- */
+function renderSceneList(){
+  const el = document.getElementById('sceneList');
+  if(currentScenes.length === 0){ el.innerHTML = ''; return; }
+  el.innerHTML = currentScenes.map((s, i)=>`
+    <div class="scene-item">
+      <span class="txt">${escapeHtml(s)}</span>
+      <button type="button" class="rm" data-index="${i}">✕</button>
+    </div>
+  `).join('');
+  el.querySelectorAll('.rm').forEach(b=>{
+    b.addEventListener('click', ()=>{
+      currentScenes.splice(Number(b.dataset.index), 1);
+      renderSceneList();
+    });
+  });
+}
+function addSceneFromInput(){
+  const input = document.getElementById('sceneInput');
+  const val = input.value.trim();
+  if(!val) return;
+  currentScenes.push(val);
+  input.value = '';
+  renderSceneList();
+  input.focus();
+}
+document.getElementById('sceneAddBtn').addEventListener('click', addSceneFromInput);
+document.getElementById('sceneInput').addEventListener('keydown', (e)=>{
+  if(e.key === 'Enter'){ e.preventDefault(); addSceneFromInput(); }
+});
+
+function renderSettingList(){
+  const el = document.getElementById('settingList');
+  if(currentSettings.length === 0){ el.innerHTML = ''; return; }
+  el.innerHTML = currentSettings.map((s, i)=>`
+    <div class="scene-item">
+      <span class="txt">${escapeHtml(s)}</span>
+      <button type="button" class="rm" data-index="${i}">✕</button>
+    </div>
+  `).join('');
+  el.querySelectorAll('.rm').forEach(b=>{
+    b.addEventListener('click', ()=>{
+      currentSettings.splice(Number(b.dataset.index), 1);
+      renderSettingList();
+    });
+  });
+}
+function addSettingFromInput(){
+  const input = document.getElementById('settingInput');
+  const val = input.value.trim();
+  if(!val) return;
+  currentSettings.push(val);
+  input.value = '';
+  renderSettingList();
+  input.focus();
+}
+document.getElementById('settingAddBtn').addEventListener('click', addSettingFromInput);
+document.getElementById('settingInput').addEventListener('keydown', (e)=>{
+  if(e.key === 'Enter'){ e.preventDefault(); addSettingFromInput(); }
+});
+
 function renderStatusPicker(selected){
   const el = document.getElementById('statusPicker');
   const set = STATUS_SETS[currentType];
@@ -762,6 +920,10 @@ function openModal(id){
     renderProductGrid(c.products || []);
     currentImages = (c.images || []).slice();
     renderImagePreview();
+    currentScenes = (c.scenes || []).slice();
+    renderSceneList();
+    currentSettings = (c.settings || []).slice();
+    renderSettingList();
     renderStatusPicker(c.status);
     document.getElementById('deleteBtn').style.display = 'inline-block';
   } else {
@@ -769,6 +931,10 @@ function openModal(id){
     document.getElementById('modalTitle').textContent = '新增靈感卡';
     const initType = (activeTypeTab === '畫稿') ? '畫稿' : '文稿';
     setCurrentType(initType);
+    currentScenes = [];
+    renderSceneList();
+    currentSettings = [];
+    renderSettingList();
     document.getElementById('deleteBtn').style.display = 'none';
   }
   overlay.classList.add('open');
@@ -803,16 +969,22 @@ document.getElementById('cardForm').addEventListener('submit', (e)=>{
     type: currentType, title, tags, notes, research, status,
     deadline: currentType === '畫稿' ? deadline : '',
     products: currentType === '畫稿' ? products : [],
-    images: currentType === '畫稿' ? currentImages.slice() : []
+    images: currentType === '畫稿' ? currentImages.slice() : [],
+    scenes: currentScenes.slice(),
+    settings: currentSettings.slice()
   };
 
+  let savedCard;
   if(editingId){
     const c = cards.find(x=>x.id===editingId);
     Object.assign(c, payload);
+    savedCard = c;
   } else {
-    cards.push(Object.assign({ id: crypto.randomUUID(), date: new Date().toISOString() }, payload));
+    savedCard = Object.assign({ id: crypto.randomUUID(), date: new Date().toISOString() }, payload);
+    cards.push(savedCard);
   }
   saveCards();
+  pushCardToCloud(savedCard);
   closeModal();
   renderTypeTabs();
   renderStatusFilterOptions();
@@ -822,8 +994,10 @@ document.getElementById('cardForm').addEventListener('submit', (e)=>{
 document.getElementById('deleteBtn').addEventListener('click', ()=>{
   if(!editingId) return;
   if(confirm('確定要刪除呢張靈感卡？此動作無法復原。')){
-    cards = cards.filter(x=>x.id!==editingId);
+    const idToDelete = editingId;
+    cards = cards.filter(x=>x.id!==idToDelete);
     saveCards();
+    deleteCardFromCloud(idToDelete);
     closeModal();
     renderTypeTabs();
     renderStatusFilterOptions();
@@ -869,12 +1043,143 @@ document.getElementById('bannerSaveBtn').addEventListener('click', ()=>{
   document.getElementById('bannerDisplay').style.display = 'block';
 });
 
+/* ---------- Firebase cross-device sync ---------- */
+function parseFirebaseConfigText(raw){
+  let text = raw.trim();
+  const braceStart = text.indexOf('{');
+  const braceEnd = text.lastIndexOf('}');
+  if(braceStart !== -1 && braceEnd !== -1){ text = text.slice(braceStart, braceEnd + 1); }
+  try{
+    return JSON.parse(text);
+  }catch(e){
+    try{
+      return Function('"use strict"; return (' + text + ')')();
+    }catch(e2){
+      throw new Error('格式無法解析，請確保貼咗完整嘅 config object（由 { 到 }）。');
+    }
+  }
+}
+
+function showSyncStatus(type, msg){
+  const el = document.getElementById('syncStatus');
+  el.className = 'sync-status ' + type;
+  el.textContent = msg;
+}
+
+function initFirebase(config){
+  try{
+    if(!firebase.apps.length){
+      firebase.initializeApp(config);
+    }
+    db = firebase.firestore();
+    try{ db.enablePersistence({ synchronizeTabs:true }); }catch(e){ /* persistence not available, still works online */ }
+    syncEnabled = true;
+    document.getElementById('syncBtn').classList.add('connected');
+    subscribeToCloudCards();
+  }catch(e){
+    console.error('Firebase 初始化失敗', e);
+    syncEnabled = false;
+    throw e;
+  }
+}
+
+function subscribeToCloudCards(){
+  if(!db) return;
+  if(unsubscribeCards) unsubscribeCards();
+  unsubscribeCards = db.collection('ideaVaultCards').onSnapshot((snapshot)=>{
+    const remoteCards = [];
+    snapshot.forEach(doc => remoteCards.push(doc.data()));
+    remoteCards.sort((a,b)=> new Date(b.date) - new Date(a.date));
+    cards = remoteCards;
+    saveCards();
+    renderTypeTabs();
+    renderStatusFilterOptions();
+    renderGrid();
+  }, (err)=>{
+    console.error('同步監聽失敗', err);
+    showSyncStatus('err', '同步中斷：' + err.message + '（請檢查 Firestore 權限設定）');
+  });
+}
+
+function pushCardToCloud(card){
+  if(!syncEnabled || !db) return;
+  db.collection('ideaVaultCards').doc(card.id).set(card).catch(err=>{
+    console.error('寫入同步失敗', err);
+    alert('呢張卡同步唔到（可能係參考圖太大或者權限問題）：' + err.message);
+  });
+}
+
+function deleteCardFromCloud(id){
+  if(!syncEnabled || !db) return;
+  db.collection('ideaVaultCards').doc(id).delete().catch(err=>{
+    console.error('刪除同步失敗', err);
+  });
+}
+
+function openSyncModal(){
+  const cfgRaw = localStorage.getItem(FIREBASE_CONFIG_KEY);
+  document.getElementById('firebaseConfigInput').value = cfgRaw ? JSON.stringify(JSON.parse(cfgRaw), null, 2) : '';
+  document.getElementById('syncDisconnectBtn').style.display = cfgRaw ? 'inline-block' : 'none';
+  const statusEl = document.getElementById('syncStatus');
+  statusEl.className = 'sync-status';
+  statusEl.textContent = '';
+  if(cfgRaw && syncEnabled) showSyncStatus('ok', '✓ 已連接，卡片會自動跨裝置同步。');
+  document.getElementById('syncOverlay').classList.add('open');
+}
+document.getElementById('syncBtn').addEventListener('click', openSyncModal);
+document.getElementById('syncCloseBtn').addEventListener('click', ()=>{
+  document.getElementById('syncOverlay').classList.remove('open');
+});
+document.getElementById('syncOverlay').addEventListener('click', (e)=>{
+  if(e.target.id === 'syncOverlay') document.getElementById('syncOverlay').classList.remove('open');
+});
+
+document.getElementById('syncConnectBtn').addEventListener('click', ()=>{
+  const raw = document.getElementById('firebaseConfigInput').value.trim();
+  if(!raw){ showSyncStatus('err', '未貼 config，先去 Firebase Console 攞。'); return; }
+  let config;
+  try{
+    config = parseFirebaseConfigText(raw);
+  }catch(e){
+    showSyncStatus('err', e.message);
+    return;
+  }
+  if(!config.apiKey || !config.projectId){
+    showSyncStatus('err', 'Config 缺少 apiKey 或 projectId，check 定係咪貼齊。');
+    return;
+  }
+  try{
+    localStorage.setItem(FIREBASE_CONFIG_KEY, JSON.stringify(config));
+    initFirebase(config);
+    showSyncStatus('ok', '✓ 已連接！而家開始，卡片會自動跨裝置同步（記得喺另一部機都貼返同一個 config）。');
+    document.getElementById('syncDisconnectBtn').style.display = 'inline-block';
+  }catch(e){
+    showSyncStatus('err', '連接失敗：' + e.message);
+  }
+});
+
+document.getElementById('syncDisconnectBtn').addEventListener('click', ()=>{
+  if(!confirm('停用同步之後，呢部機會淨係用返本機儲存，唔會再跨裝置同步（其他裝置嘅資料唔會被刪除）。確定？')) return;
+  localStorage.removeItem(FIREBASE_CONFIG_KEY);
+  if(unsubscribeCards){ unsubscribeCards(); unsubscribeCards = null; }
+  syncEnabled = false;
+  db = null;
+  document.getElementById('syncBtn').classList.remove('connected');
+  document.getElementById('syncOverlay').classList.remove('open');
+});
+
 // init
 loadCards();
 loadBanner();
 renderTypeTabs();
 renderStatusFilterOptions();
 renderGrid();
+
+const savedFirebaseConfig = localStorage.getItem(FIREBASE_CONFIG_KEY);
+if(savedFirebaseConfig){
+  try{ initFirebase(JSON.parse(savedFirebaseConfig)); }
+  catch(e){ console.error('自動連接 Firebase 失敗', e); }
+}
 </script>
 </body>
 </html>
